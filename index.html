@@ -82,7 +82,7 @@
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Edificio / Módulo</label>
-                        <select id="inputModulo" onchange="actualizarAulas()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <select id="inputModulo" onchange="cambiarModulo()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                             <option value="Módulo A">Módulo A</option>
                             <option value="Módulo B">Módulo B</option>
                             <option value="Módulo C">Módulo C</option>
@@ -91,18 +91,18 @@
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Aula / Espacio</label>
                         <select id="inputAula" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
-                            <!-- Se carga dinámicamente según el módulo seleccionado -->
+                            <!-- Se carga dinámicamente -->
                         </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
+                    <div id="contenedorEstados" class="grid grid-cols-2 gap-3">
+                        <div id="colReal">
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Estado Real</label>
                             <select id="inputReal" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <option value="Ocupado">Ocupado</option>
                                 <option value="Libre">Libre</option>
                             </select>
                         </div>
-                        <div>
+                        <div id="colPlanning">
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Planning</label>
                             <select id="inputPlanning" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <option value="Ocupado">Ocupado</option>
@@ -148,9 +148,8 @@
 
     <script>
         // PEGA AQUÍ TU URL DE GOOGLE APPS SCRIPT TERMINADA EN /exec
-        const URL_GOOGLE_SHEET = "https://script.google.com/macros/s/AKfycbw6v33DYPhuUpQ5iW8v774mUtVGOYHcVjZudBc_v19iWc5sfIFXBKTmMy1inziIDUwM/exec";
+        const URL_GOOGLE_SHEET = "https://script.google.com/macros/s/AKfycbzQ2YMgDYo3xOPaKANJEc0yXheSihNF3nCefCC2iWY/exec";
 
-        // Listado de aulas y oficinas exclusivo para Módulos A, B y C
         const listaAulas = {
             "Módulo A": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "Auditorio"],
             "Módulo B": ["B1.1", "B1.2", "B2", "B3", "B4", "B5", "B6", "B7", "B8.1", "B8.2", "B9", "B10", "B11.1", "B11.2", "B12", "B13", "B14", "B15", "B16", "B17"],
@@ -161,15 +160,18 @@
         document.getElementById('inputFecha').valueAsDate = new Date();
 
         document.addEventListener('DOMContentLoaded', () => {
-            actualizarAulas();
+            cambiarModulo();
             actualizarTablero();
         });
 
-        function actualizarAulas() {
+        function cambiarModulo() {
             const moduloSelect = document.getElementById('inputModulo').value;
             const aulaSelect = document.getElementById('inputAula');
+            const colPlanning = document.getElementById('colPlanning');
+            const colReal = document.getElementById('colReal');
+            
+            // Actualizar aulas
             aulaSelect.innerHTML = '';
-
             const aulasDelModulo = listaAulas[moduloSelect] || [];
             aulasDelModulo.forEach(aula => {
                 let option = document.createElement('option');
@@ -177,6 +179,15 @@
                 option.text = aula;
                 aulaSelect.appendChild(option);
             });
+
+            // Si es Módulo C, ocultar planning y expandir real. Si no, mostrar ambos.
+            if (moduloSelect === "Módulo C") {
+                colPlanning.style.display = 'none';
+                colReal.className = 'col-span-2'; // Ocupa todo el ancho
+            } else {
+                colPlanning.style.display = 'block';
+                colReal.className = 'col-span-1'; // Vuelve a la mitad
+            }
         }
 
         async function guardarAuditoria(e) {
@@ -186,18 +197,28 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Enviando...';
 
+            const modulo = document.getElementById('inputModulo').value;
             const real = document.getElementById('inputReal').value;
-            const planning = document.getElementById('inputPlanning').value;
-            const estado = (real === 'Libre' && planning === 'Ocupado') ? 'OCIOSA' : 'OK';
+            
+            let planning = "-";
+            let estado = "OK";
 
-            // Generar hora actual exacta de carga (Formato 24hs)
+            if (modulo === "Módulo C") {
+                // Para Módulo C no hay planning, el estado se rige solo por si está libre u ocupado (o N/A)
+                planning = "N/A";
+                estado = (real === "Libre") ? "LIBRE OFICINA" : "OCUPADO";
+            } else {
+                planning = document.getElementById('inputPlanning').value;
+                estado = (real === 'Libre' && planning === 'Ocupado') ? 'OCIOSA' : 'OK';
+            }
+
             const ahora = new Date();
             const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
             const nuevoRegistro = {
                 fecha: document.getElementById('inputFecha').value,
                 hora: horaActual,
-                modulo: document.getElementById('inputModulo').value,
+                modulo: modulo,
                 aula: document.getElementById('inputAula').value,
                 real: real,
                 planning: planning,
@@ -205,7 +226,6 @@
             };
 
             try {
-                // Enviar datos a Google Sheets
                 await fetch(URL_GOOGLE_SHEET, {
                     method: 'POST',
                     mode: 'no-cors',

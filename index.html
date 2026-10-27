@@ -95,14 +95,14 @@
                         </select>
                     </div>
                     <div id="contenedorEstados" class="grid grid-cols-2 gap-3">
-                        <div id="colReal">
+                        <div id="colReal" class="col-span-1">
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Estado Real</label>
                             <select id="inputReal" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <option value="Ocupado">Ocupado</option>
                                 <option value="Libre">Libre</option>
                             </select>
                         </div>
-                        <div id="colPlanning">
+                        <div id="colPlanning" class="col-span-1">
                             <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Planning</label>
                             <select id="inputPlanning" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
                                 <option value="Ocupado">Ocupado</option>
@@ -130,7 +130,7 @@
                             <tr>
                                 <th class="p-2.5">Fecha / Hora</th>
                                 <th class="p-2.5">Módulo</th>
-                                <th class="p-2.5">Aula</th>
+                                <th class="p-2.5">Aula / Oficina</th>
                                 <th class="p-2.5">Real</th>
                                 <th class="p-2.5">Planning</th>
                                 <th class="p-2.5 text-center">Estado</th>
@@ -170,7 +170,7 @@
             const colPlanning = document.getElementById('colPlanning');
             const colReal = document.getElementById('colReal');
             
-            // Actualizar aulas
+            // Cargar aulas/oficinas correspondientes
             aulaSelect.innerHTML = '';
             const aulasDelModulo = listaAulas[moduloSelect] || [];
             aulasDelModulo.forEach(aula => {
@@ -180,13 +180,15 @@
                 aulaSelect.appendChild(option);
             });
 
-            // Si es Módulo C, ocultar planning y expandir real. Si no, mostrar ambos.
+            // Si es Módulo C -> ocultar la columna de Planning y expandir la de Real
             if (moduloSelect === "Módulo C") {
                 colPlanning.style.display = 'none';
-                colReal.className = 'col-span-2'; // Ocupa todo el ancho
+                colReal.classList.remove('col-span-1');
+                colReal.classList.add('col-span-2');
             } else {
                 colPlanning.style.display = 'block';
-                colReal.className = 'col-span-1'; // Vuelve a la mitad
+                colReal.classList.remove('col-span-2');
+                colReal.classList.add('col-span-1');
             }
         }
 
@@ -204,9 +206,8 @@
             let estado = "OK";
 
             if (modulo === "Módulo C") {
-                // Para Módulo C no hay planning, el estado se rige solo por si está libre u ocupado (o N/A)
                 planning = "N/A";
-                estado = (real === "Libre") ? "LIBRE OFICINA" : "OCUPADO";
+                estado = (real === "Libre") ? "OCIOSA" : "OK";
             } else {
                 planning = document.getElementById('inputPlanning').value;
                 estado = (real === 'Libre' && planning === 'Ocupado') ? 'OCIOSA' : 'OK';

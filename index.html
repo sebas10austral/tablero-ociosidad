@@ -185,4 +185,143 @@
             const moduloSelect = document.getElementById('inputModulo').value;
             const aulaSelect = document.getElementById('inputAula');
             
-            aulaSelect
+            aulaSelect.innerHTML = '';
+            const aulasDelModulo = listaAulas[moduloSelect] || [];
+            aulasDelModulo.forEach(aula => {
+                let option = document.createElement('option');
+                option.value = aula;
+                option.text = aula;
+                aulaSelect.appendChild(option);
+            });
+        }
+
+        function actualizarModo() {
+            const tipo = document.getElementById('inputTipoCarga').value;
+            const inputHora = document.getElementById('inputHora');
+            
+            document.getElementById('kpi-modo').innerText = tipo === "Espacio Real" ? "Real (Tablet)" : "Planning (PC)";
+
+            if (tipo === "Espacio Real") {
+                // Setea el bloque de 30 min actual y deshabilita la edición manual
+                inputHora.value = obtenerBloqueHorario(new Date());
+                inputHora.disabled = true;
+                inputHora.classList.add("bg-slate-100", "text-slate-500");
+            } else {
+                // Permite elegir el bloque horario libremente en la PC
+                inputHora.disabled = false;
+                inputHora.classList.remove("bg-slate-100", "text-slate-500");
+            }
+        }
+
+        async function guardarAuditoria(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnGuardar');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Enviando...';
+
+            const tipoCarga = document.getElementById('inputTipoCarga').value;
+            let horaAEnviar = document.getElementById('inputHora').value;
+
+            // Si es Espacio Real, asegura la hora exacta del momento redondeada a bloque de 30 min
+            if (tipoCarga === "Espacio Real") {
+                horaAEnviar = obtenerBloqueHorario(new Date());
+            }
+
+            const nuevoRegistro = {
+                fecha: document.getElementById('inputFecha').value,
+                hora: horaAEnviar,
+                modulo: document.getElementById('inputModulo').value,
+                aula: document.getElementById('inputAula').value,
+                tipoCarga: tipoCarga,
+                estado: document.getElementById('inputEstado').value
+            };
+
+            try {
+                await fetch(URL_GOOGLE_SHEET, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevoRegistro)
+                });
+
+                registros.unshift(nuevoRegistro);
+                localStorage.setItem('auditorias_sesion', JSON.stringify(registros));
+                
+                actualizarTablero();
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error de conexión. Revisa el acceso a internet.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Registrar Dato';
+            }
+        }
+
+        function limpiarRegistros() {
+            if (confirm("¿Deseas limpiar el historial visual de esta pantalla? (Tus datos en Google Sheets seguirán seguros)")) {
+                registros = [];
+                localStorage.removeItem('auditorias_sesion');
+                actualizarTablero();
+            }
+        }
+
+        function actualizarTablero() {
+            const tbody = document.getElementById('tablaCuerpo');
+            tbody.innerHTML = '';
+
+            let total = registros.length;
+            let realCount = 0;
+            let planningCount = 0;
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay registros tomados en este turno.</td></tr>`;
+            } else {
+                registros.forEach((reg) => {
+                    if (reg.tipoCarga === 'Espacio Real') realCount++; else planningCount++;
+
+                    let tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50';
+                    
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-medium text-slate-600">
+                            ${reg.fecha} <br><span class="text-xs font-bold text-indigo-600"><i class="fa-regular fa-clock mr-1"></i>Bloque ${reg.hora}</span>
+                        </td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${reg.tipoCarga === 'Espacio Real' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
+                                ${reg.tipoCarga}
+                            </span>
+                        </td>
+                        <td class="p-2.5 font-bold text-indigo-900">${reg.modulo} - ${reg.aula}</td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-xs font-semibold ${reg.estado === 'Ocupado' ? 'bg-slate-200 text-slate-800' : 'bg-amber-100 text-amber-800'}">
+                                ${reg.estado}
+                            </span>
+                        </td>
+                        <td class="p-2.5 text-center">
+                            <span class="text-emerald-600 text-xs font-semibold flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> OK
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-real').innerText = realCount;
+            document.getElementById('kpi-planning').innerText = planningCount;
+        }
+
+        function filtrarTabla() {
+            let filtro = document.getElementById('buscador').value.toLowerCase();
+            let filas = document.getElementById('tablaCuerpo').getElementsByTagName('tr');
+            for (let fila of filas) {
+                let texto = fila.innerText.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? '' : 'none';
+            }
+        }
+    </script>
+</body>
+</html>

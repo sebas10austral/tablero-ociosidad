@@ -35,7 +35,7 @@
 
     <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
 
-        <!-- Tarjetas de KPIs (Sesión Actual) -->
+        <!-- Tarjetas de KPIs -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
                 <div>
@@ -77,15 +77,21 @@
                 </h2>
                 <form id="auditForm" onsubmit="guardarAuditoria(event)" class="space-y-3.5">
                     <div>
-                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Fecha</label>
-                        <input type="date" id="inputFecha" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
-                    </div>
-                    <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tipo de Carga</label>
                         <select id="inputTipoCarga" onchange="actualizarModo()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-bold bg-indigo-50 text-indigo-900 border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
                             <option value="Espacio Real">📱 Espacio Real (Relevamiento en Tablet)</option>
                             <option value="Planning">💻 Planning (Programación en PC)</option>
                         </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Fecha</label>
+                            <input type="date" id="inputFecha" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                        </div>
+                        <div id="contenedorHora">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Hora</label>
+                            <input type="time" id="inputHora" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                        </div>
                     </div>
                     <div>
                         <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Edificio / Módulo</label>
@@ -131,7 +137,7 @@
                     <table class="w-full text-left text-sm" id="tablaAuditoria">
                         <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
                             <tr>
-                                <th class="p-2.5">Hora Exacta</th>
+                                <th class="p-2.5">Fecha y Hora</th>
                                 <th class="p-2.5">Origen</th>
                                 <th class="p-2.5">Módulo / Aula</th>
                                 <th class="p-2.5">Estado</th>
@@ -159,6 +165,10 @@
 
         let registros = JSON.parse(localStorage.getItem('auditorias_sesion')) || [];
         document.getElementById('inputFecha').valueAsDate = new Date();
+        
+        // Inicializar hora actual por defecto
+        const ahoraInit = new Date();
+        document.getElementById('inputHora').value = ahoraInit.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
 
         document.addEventListener('DOMContentLoaded', () => {
             cambiarModulo();
@@ -182,7 +192,21 @@
 
         function actualizarModo() {
             const tipo = document.getElementById('inputTipoCarga').value;
+            const inputHora = document.getElementById('inputHora');
+            
             document.getElementById('kpi-modo').innerText = tipo === "Espacio Real" ? "Real (Tablet)" : "Planning (PC)";
+
+            if (tipo === "Espacio Real") {
+                // Si es Espacio Real, bloqueamos la hora con la del sistema actual y la ocultamos o dejamos fija
+                const ahora = new Date();
+                inputHora.value = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+                inputHora.disabled = true;
+                inputHora.classList.add("bg-slate-100", "text-slate-500");
+            } else {
+                // Si es Planning, permitimos elegir libremente la hora del relevamiento (ej. 10:00)
+                inputHora.disabled = false;
+                inputHora.classList.remove("bg-slate-100", "text-slate-500");
+            }
         }
 
         async function guardarAuditoria(e) {
@@ -192,12 +216,9 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Enviando...';
 
-            const ahora = new Date();
-            const horaActual = ahora.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
-
             const nuevoRegistro = {
                 fecha: document.getElementById('inputFecha').value,
-                hora: horaActual,
+                hora: document.getElementById('inputHora').value,
                 modulo: document.getElementById('inputModulo').value,
                 aula: document.getElementById('inputAula').value,
                 tipoCarga: document.getElementById('inputTipoCarga').value,
@@ -253,7 +274,7 @@
                     
                     tr.innerHTML = `
                         <td class="p-2.5 font-medium text-slate-600">
-                            <i class="fa-regular fa-clock text-slate-400 mr-1"></i>${reg.hora}
+                            ${reg.fecha} <br><span class="text-xs text-slate-400"><i class="fa-regular fa-clock mr-1"></i>${reg.hora}</span>
                         </td>
                         <td class="p-2.5">
                             <span class="px-2 py-0.5 rounded text-[11px] font-bold ${reg.tipoCarga === 'Espacio Real' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">

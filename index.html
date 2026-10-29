@@ -3,234 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tablero de Ociosidad - Auditoría</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, sans-serif;
-        }
-        body {
-            background-color: #f4f6f9;
-            padding: 20px;
-            margin: 0;
-        }
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        h2 {
-            margin-top: 0;
-            color: #333;
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-            color: #555;
-        }
-        select, input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 16px;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .info-block {
-            font-size: 13px;
-            color: #666;
-            margin-top: 4px;
-        }
-        #mensaje {
-            margin-top: 15px;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            display: none;
-        }
-        .exito { background-color: #d4edda; color: #155724; }
-        .error { background-color: #f8d7da; color: #721c24; }
-    </style>
+    <title>Tablero de Ociosidad - Universidad Austral</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
-<div class="container">
-    <h2>Registro de Auditoría</h2>
-    
-    <form id="auditoriaForm">
-        <!-- Tipo de Registro -->
-        <div class="form-group">
-            <label for="tipoCarga">Tipo de Carga</label>
-            <select id="tipoCarga" onchange="gestionarTipoCarga()">
-                <option value="Espacio Real">Espacio Real (Tablet / Manual)</option>
-                <option value="Planning">Planning (Programación)</option>
-            </select>
+    <!-- Header Principal -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center space-x-3 w-full sm:w-auto justify-between sm:justify-start">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-indigo-600 p-2 rounded-lg text-white">
+                        <i class="fa-solid fa-chart-pie text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-base sm:text-lg font-bold tracking-tight">Universidad Austral</h1>
+                        <p class="text-[10px] sm:text-xs text-slate-400">Control de Ociosidad de Aulas</p>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+                <span id="syncStatus" class="bg-emerald-900/60 text-emerald-300 border border-emerald-700 text-xs px-2.5 py-1 rounded-lg flex items-center font-medium">
+                    <i class="fa-solid fa-cloud-check mr-1.5"></i> Conectado a la Nube
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-6 space-y-6">
+
+        <!-- Tarjetas de KPIs -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-500">Total Cargas</p>
+                    <h3 id="kpi-total" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-0.5">0</h3>
+                </div>
+                <div class="bg-blue-50 text-blue-600 p-2.5 rounded-full"><i class="fa-solid fa-clipboard-list text-lg"></i></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-600">Espacio Real</p>
+                    <h3 id="kpi-real" class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-0.5">0</h3>
+                </div>
+                <div class="bg-emerald-50 text-emerald-600 p-2.5 rounded-full"><i class="fa-solid fa-tablet-screen-button text-lg"></i></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-indigo-600">Planning</p>
+                    <h3 id="kpi-planning" class="text-2xl sm:text-3xl font-bold text-indigo-600 mt-0.5">0</h3>
+                </div>
+                <div class="bg-indigo-50 text-indigo-600 p-2.5 rounded-full"><i class="fa-solid fa-calendar-check text-lg"></i></div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center justify-between">
+                <div>
+                    <p class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-amber-600">Modo Activo</p>
+                    <h3 id="kpi-modo" class="text-base sm:text-lg font-bold text-amber-600 mt-0.5">Real</h3>
+                </div>
+                <div class="bg-amber-50 text-amber-600 p-2.5 rounded-full"><i class="fa-solid fa-sliders text-lg"></i></div>
+            </div>
         </div>
 
-        <!-- Fecha -->
-        <div class="form-group">
-            <label for="fecha">Fecha</label>
-            <input type="date" id="fecha" required>
+        <!-- Formulario y Tabla -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Formulario de Registro -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <h2 class="text-base font-bold text-slate-900 flex items-center">
+                    <i class="fa-solid fa-pen-to-square text-indigo-600 mr-2"></i> Carga de Auditoría
+                </h2>
+                <form id="auditForm" onsubmit="guardarAuditoria(event)" class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Tipo de Carga</label>
+                        <select id="inputTipoCarga" onchange="actualizarModo()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm font-bold bg-indigo-50 text-indigo-900 border-indigo-200 focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="Espacio Real">📱 Espacio Real</option>
+                            <option value="Planning">💻 Planning</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Fecha</label>
+                            <input type="date" id="inputFecha" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                        </div>
+                        <div id="contenedorHora">
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Bloque Horario</label>
+                            <input type="time" id="inputHora" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-indigo-500 outline-none" required>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Edificio / Módulo</label>
+                        <select id="inputModulo" onchange="cambiarModulo()" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <option value="Módulo A">Módulo A</option>
+                            <option value="Módulo B">Módulo B</option>
+                            <option value="Módulo C">Módulo C</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Aula / Espacio</label>
+                        <select id="inputAula" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 outline-none">
+                            <!-- Se carga dinámicamente -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">Estado</label>
+                        <select id="inputEstado" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-indigo-500 font-semibold outline-none">
+                            <option value="Ocupado">🟢 Ocupado</option>
+                            <option value="Libre">🟡 Libre</option>
+                        </select>
+                    </div>
+                    <button type="submit" id="btnGuardar" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition shadow flex items-center justify-center text-sm">
+                        <i class="fa-solid fa-paper-plane mr-2"></i> Registrar Dato
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tabla de Registros Recientes -->
+            <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-slate-200 space-y-4 flex flex-col">
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <h2 class="text-base font-bold text-slate-900 flex items-center w-full sm:w-auto">
+                        <i class="fa-solid fa-list-check text-indigo-600 mr-2"></i> Envíos de la Sesión
+                    </h2>
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <input type="text" id="buscador" onkeyup="filtrarTabla()" placeholder="Buscar aula..." class="border border-slate-300 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 w-full sm:w-40">
+                        <button onclick="limpiarRegistros()" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3 py-1.5 rounded-lg text-sm font-medium transition flex items-center gap-1.5" title="Limpiar pantalla local">
+                            <i class="fa-solid fa-trash-can"></i> <span class="hidden sm:inline">Limpiar</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto flex-1 border border-slate-100 rounded-lg">
+                    <table class="w-full text-left text-sm" id="tablaAuditoria">
+                        <thead class="bg-slate-100 text-slate-600 uppercase text-xs">
+                            <tr>
+                                <th class="p-2.5">Fecha / Bloque</th>
+                                <th class="p-2.5">Origen</th>
+                                <th class="p-2.5">Módulo / Aula</th>
+                                <th class="p-2.5">Estado</th>
+                                <th class="p-2.5 text-center">Estado Envío</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200" id="tablaCuerpo">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </div>
 
-        <!-- Bloque de Horario (Se ajusta según el Tipo de Carga) -->
-        <div class="form-group">
-            <label for="hora">Bloque Horario</label>
-            <input type="text" id="hora" readonly>
-            <div id="horaInfo" class="info-block">Se calculará automáticamente en bloques de 15 minutos (00, 15, 30, 45).</div>
-        </div>
+    </main>
 
-        <!-- Módulo -->
-        <div class="form-group">
-            <label for="modulo">Módulo</label>
-            <select id="modulo" required>
-                <option value="">Seleccionar Módulo...</option>
-                <option value="Módulo A">Módulo A</option>
-                <option value="Módulo B">Módulo B</option>
-                <option value="Módulo C">Módulo C</option>
-            </select>
-        </div>
+    <script>
+        const URL_GOOGLE_SHEET = "https://script.google.com/macros/s/AKfycbw6v33DYPhuUpQ5iW8v774mUtVGOYHcVjZudBc_v19iWc5sfIFXBKTmMy1inziIDUwM/exec";
 
-        <!-- Aula -->
-        <div class="form-group">
-            <label for="aula">Aula / Espacio</label>
-            <input type="text" id="aula" placeholder="Ej: 70, 108, Aula Magna" required>
-        </div>
-
-        <!-- Estado -->
-        <div class="form-group">
-            <label for="estado">Estado</label>
-            <select id="estado" required>
-                <option value="Libre">Libre</option>
-                <option value="Ocupado">Ocupado</option>
-            </select>
-        </div>
-
-        <button type="submit">Guardar Registro</button>
-    </form>
-
-    <div id="mensaje"></div>
-</div>
-
-<script>
-    // REEMPLAZA ESTA URL CON LA DE TU GOOGLE APPS SCRIPT
-    const WEB_APP_URL = "HTTPS://SCRIPT.GOOGLE.COM/MACROS/S/TU_ID_DE_SCRIPT/EXEC";
-
-    // Al cargar la página, inicializamos la fecha y el bloque de 15 minutos
-    document.addEventListener("DOMContentLoaded", () => {
-        document.getElementById('fecha').valueAsDate = new Date();
-        gestionarTipoCarga();
-    });
-
-    // Función para calcular el bloque exacto de 15 minutos según el requerimiento
-    function obtenerBloque15Minutos() {
-        const ahora = new Date();
-        const horas = String(ahora.getHours()).padStart(2, '0');
-        const minutosReales = ahora.getMinutes();
-
-        let minutosBloque = '00';
-
-        if (minutosReales >= 0 && minutosReales <= 14) {
-            minutosBloque = '00';
-        } else if (minutosReales >= 15 && minutosReales <= 29) {
-            minutosBloque = '15';
-        } else if (minutosReales >= 30 && minutosReales <= 44) {
-            minutosBloque = '30';
-        } else {
-            minutosBloque = '45';
-        }
-
-        return `${horas}:${minutosBloque}`;
-    }
-
-    // Cambia el comportamiento del campo Hora según si es Espacio Real o Planning
-    function gestionarTipoCarga() {
-        const tipoCarga = document.getElementById('tipoCarga').value;
-        const horaInput = document.getElementById('hora');
-        const horaInfo = document.getElementById('horaInfo');
-
-        if (tipoCarga === "Espacio Real") {
-            horaInput.value = obtenerBloque15Minutos();
-            horaInput.readOnly = true;
-            horaInfo.textContent = "Calculado automáticamente a bloques de 15 min (00, 15, 30, 45).";
-        } else {
-            // En Planning permite la lectura normal o manual sin forzar los 15 min de la tablet
-            horaInput.readOnly = false;
-            horaInput.placeholder = "Ej: 10:00";
-            horaInfo.textContent = "Ingrese la hora correspondiente al Planning.";
-        }
-    }
-
-    // Actualizar la hora dinámica cada minuto si está en Espacio Real
-    setInterval(() => {
-        if (document.getElementById('tipoCarga').value === "Espacio Real") {
-            document.getElementById('hora').value = obtenerBloque15Minutos();
-        }
-    }, 60000);
-
-    // Envío de datos a Google Sheets
-    document.getElementById('auditoriaForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-
-        const mensajeDiv = document.getElementById('mensaje');
-        mensajeDiv.style.display = 'none';
-
-        const datos = {
-            tipoCarga: document.getElementById('tipoCarga').value,
-            fecha: document.getElementById('fecha').value,
-            hora: document.getElementById('hora').value,
-            modulo: document.getElementById('modulo').value,
-            aula: document.getElementById('aula').value,
-            estado: document.getElementById('estado').value
+        const listaAulas = {
+            "Módulo A": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "Auditorio"],
+            "Módulo B": ["B1.1", "B1.2", "B2", "B3", "B4", "B5", "B6", "B7", "B8.1", "B8.2", "B9", "B10", "B11.1", "B11.2", "B12", "B13", "B14", "B15", "B16", "B17"],
+            "Módulo C": ["50", "51", "52", "53", "54", "55", "57", "58", "65", "66", "67", "68", "69", "70", "71", "72", "73", "74", "75", "79", "80", "81", "82", "83", "84", "85", "86", "87", "97", "98", "99", "100", "101", "102", "103", "104", "105", "106", "107", "108", "109", "110", "111", "Olivo C"]
         };
 
-        fetch(WEB_APP_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        })
-        .then(() => {
-            mensajeDiv.className = 'exito';
-            mensajeDiv.textContent = '¡Registro guardado correctamente!';
-            mensajeDiv.style.display = 'block';
+        let registros = JSON.parse(localStorage.getItem('auditorias_sesion')) || [];
+        document.getElementById('inputFecha').valueAsDate = new Date();
 
-            // Resetear solo los campos de aula y estado para agilizar la carga consecutiva
-            document.getElementById('aula').value = '';
-            document.getElementById('estado').value = 'Libre';
-            
-            // Recalcular la hora por si cambió el minuto
-            gestionarTipoCarga();
-        })
-        .catch(error => {
-            mensajeDiv.className = 'error';
-            mensajeDiv.textContent = 'Ocurrió un error al guardar los datos.';
-            mensajeDiv.style.display = 'block';
-            console.error('Error:', error);
+        // Función de redondeo automático a bloques de 30 minutos
+        function obtenerBloqueHorario(fechaObj) {
+            let horas = fechaObj.getHours();
+            let minutos = fechaObj.getMinutes();
+            let bloqueMinutos = "";
+
+            if (minutos === 0) {
+                bloqueMinutos = "00";
+            } else if (minutos <= 30) {
+                bloqueMinutos = "30";
+            } else {
+                bloqueMinutos = "00";
+                horas = horas + 1; // Pasa a la hora siguiente en punto
+            }
+
+            let horaFormateada = horas < 10 ? "0" + horas : horas;
+            return `${horaFormateada}:${bloqueMinutos}`;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            cambiarModulo();
+            actualizarModo();
+            actualizarTablero();
         });
-    });
-</script>
 
+        function cambiarModulo() {
+            const moduloSelect = document.getElementById('inputModulo').value;
+            const aulaSelect = document.getElementById('inputAula');
+            
+            aulaSelect.innerHTML = '';
+            const aulasDelModulo = listaAulas[moduloSelect] || [];
+            aulasDelModulo.forEach(aula => {
+                let option = document.createElement('option');
+                option.value = aula;
+                option.text = aula;
+                aulaSelect.appendChild(option);
+            });
+        }
+
+        function actualizarModo() {
+            const tipo = document.getElementById('inputTipoCarga').value;
+            const inputHora = document.getElementById('inputHora');
+            
+            document.getElementById('kpi-modo').innerText = tipo === "Espacio Real" ? "Real (Tablet)" : "Planning (PC)";
+
+            if (tipo === "Espacio Real") {
+                // Setea el bloque de 30 min actual y deshabilita la edición manual
+                inputHora.value = obtenerBloqueHorario(new Date());
+                inputHora.disabled = true;
+                inputHora.classList.add("bg-slate-100", "text-slate-500");
+            } else {
+                // Permite elegir el bloque horario libremente en la PC
+                inputHora.disabled = false;
+                inputHora.classList.remove("bg-slate-100", "text-slate-500");
+            }
+        }
+
+        async function guardarAuditoria(e) {
+            e.preventDefault();
+            
+            const btn = document.getElementById('btnGuardar');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Enviando...';
+
+            const tipoCarga = document.getElementById('inputTipoCarga').value;
+            let horaAEnviar = document.getElementById('inputHora').value;
+
+            // Si es Espacio Real, asegura la hora exacta del momento redondeada a bloque de 30 min
+            if (tipoCarga === "Espacio Real") {
+                horaAEnviar = obtenerBloqueHorario(new Date());
+            }
+
+            const nuevoRegistro = {
+                fecha: document.getElementById('inputFecha').value,
+                hora: horaAEnviar,
+                modulo: document.getElementById('inputModulo').value,
+                aula: document.getElementById('inputAula').value,
+                tipoCarga: tipoCarga,
+                estado: document.getElementById('inputEstado').value
+            };
+
+            try {
+                await fetch(URL_GOOGLE_SHEET, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(nuevoRegistro)
+                });
+
+                registros.unshift(nuevoRegistro);
+                localStorage.setItem('auditorias_sesion', JSON.stringify(registros));
+                
+                actualizarTablero();
+
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Error de conexión. Revisa el acceso a internet.");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Registrar Dato';
+            }
+        }
+
+        function limpiarRegistros() {
+            if (confirm("¿Deseas limpiar el historial visual de esta pantalla? (Tus datos en Google Sheets seguirán seguros)")) {
+                registros = [];
+                localStorage.removeItem('auditorias_sesion');
+                actualizarTablero();
+            }
+        }
+
+        function actualizarTablero() {
+            const tbody = document.getElementById('tablaCuerpo');
+            tbody.innerHTML = '';
+
+            let total = registros.length;
+            let realCount = 0;
+            let planningCount = 0;
+
+            if (total === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">No hay registros tomados en este turno.</td></tr>`;
+            } else {
+                registros.forEach((reg) => {
+                    if (reg.tipoCarga === 'Espacio Real') realCount++; else planningCount++;
+
+                    let tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-50';
+                    
+                    tr.innerHTML = `
+                        <td class="p-2.5 font-medium text-slate-600">
+                            ${reg.fecha} <br><span class="text-xs font-bold text-indigo-600"><i class="fa-regular fa-clock mr-1"></i>Bloque ${reg.hora}</span>
+                        </td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${reg.tipoCarga === 'Espacio Real' ? 'bg-emerald-100 text-emerald-800' : 'bg-indigo-100 text-indigo-800'}">
+                                ${reg.tipoCarga}
+                            </span>
+                        </td>
+                        <td class="p-2.5 font-bold text-indigo-900">${reg.modulo} - ${reg.aula}</td>
+                        <td class="p-2.5">
+                            <span class="px-2 py-0.5 rounded text-xs font-semibold ${reg.estado === 'Ocupado' ? 'bg-slate-200 text-slate-800' : 'bg-amber-100 text-amber-800'}">
+                                ${reg.estado}
+                            </span>
+                        </td>
+                        <td class="p-2.5 text-center">
+                            <span class="text-emerald-600 text-xs font-semibold flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-circle-check"></i> OK
+                            </span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('kpi-total').innerText = total;
+            document.getElementById('kpi-real').innerText = realCount;
+            document.getElementById('kpi-planning').innerText = planningCount;
+        }
+
+        function filtrarTabla() {
+            let filtro = document.getElementById('buscador').value.toLowerCase();
+            let filas = document.getElementById('tablaCuerpo').getElementsByTagName('tr');
+            for (let fila of filas) {
+                let texto = fila.innerText.toLowerCase();
+                fila.style.display = texto.includes(filtro) ? '' : 'none';
+            }
+        }
+    </script>
 </body>
 </html>
